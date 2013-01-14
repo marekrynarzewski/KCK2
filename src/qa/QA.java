@@ -1,301 +1,220 @@
 package qa;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Scanner;
-import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import morfologik.stemming.PolishStemmer;
+import morfologik.stemming.WordData;
+
 public class QA
 {
-	private final String sciezka = "cache\\QA";
-	
-	public static Scanner wejscie = new Scanner(System.in);
-	
-	private String pytanie = "";
 	private String przymiotnik = "";
 	private String X = "";
 	private String przyimek = "";
 	private String Y = "";
 	
 	private String[] elementyFrazy;
+	private String[] niedozwolneTypy = {"pdf", "doc", "ps"};
+	private String[] przyimki = {"z", "do", "na", "bez", "za", "pod", "u", "w", "nad", "od", "po"};
 	
-	private Vector<String> linki = new Vector<String>();
+	private TreeSet<String> linki = new TreeSet<String>();
+	private Vector<String> bledneLinki = new Vector<String>();
+	private int liczbaZlychLinkow = 0;
 	
-	private Map<String, Integer> listaOtoczeniaSlowKluczowych = new TreeMap<String, Integer>();
+	private SortedMap<String, Integer> listaOtoczeniaSlowKluczowych = new TreeMap<String, Integer>();
+	private SortedMap<String, Integer> czasyPobierania = new TreeMap<String, Integer>();
+	private long czasDzialania = 0;
 	
-	private int bledneLinki = 0;
+	private Cache cache = new Cache();
+	private final String sciezka = QA.Cache.sciezka+"\\strony";
+	private String[] podejrzaneSlowa = {"print", "print_test"};
 	
-	private String[] niedozwolneTypy = {"pdf", "doc", "ps", "pdf" };
-	
-	private boolean trybLokalny = false;
-
-	private String plikLokalny;
-	
-	/**
-	 * @param args
-	 * @throws IOException 
-	 * @throws FileNotFoundException 
-	 */
-	public static void main(String[] args) throws IOException
+	public static void main(String[] args)
 	{
-		QA qa = new QA();
+ 		QA qa = new QA();
 		qa.uruchomAlgorytm();
 	}
 	
-	public static <K, V> long pozycjaKluczaWMapie(Map<K, V> zrodlo, K klucz)
-	{
-		long wynik = -1;
-		if (!zrodlo.containsKey(klucz))
-		{
-			return wynik;
-		}
-		else
-		{
-			++wynik;
-			for (Map.Entry<K, V> wpis : zrodlo.entrySet())
-			{
-				if (!wpis.getKey().equals(klucz))
-				{
-					++wynik;
-				}
-				else
-				{
-					++wynik;
-					break;
-				}
-			}
-			return wynik;
-		}
-	}
-	
-	public static <K, V> K zwrocKlucz(Map<K, V> zrodlo, long pozycja)
-	{
-		long wskaznik = 0;
-		for (Map.Entry<K, V> wpis : zrodlo.entrySet())
-		{
-			if (wskaznik == pozycja)
-			{
-				return wpis.getKey();
-			}
-			else
-			{
-				++wskaznik;
-			}
-		}
-		return null;
-	}
-	
-	public static <K, V> SortedMap<K, V> goraMapy(TreeMap<K, V> zrodlo, long pozycji)
-	{
-		K toKey = QA.zwrocKlucz(zrodlo, pozycji);
-		if (toKey == null)
-		{
-			return new TreeMap<K, V>();
-		}
-		else
-		{
-			return zrodlo.headMap(toKey);
-		}
-	}
-	public static void wypisz(Object str)
-	{
-		System.out.print(str);
-	}
-	
-	public static void wypiszZLinia(Object str)
-	{
-		System.out.println(str);
-	}
-	
-	public static void wyjscie(String wiadomosc, int numerBledu)
-	{
-		QA.wypiszZLinia("[Błąd] " + wiadomosc);
-		System.exit(numerBledu);
-	}
-	
-	public static void ostrzez(String wiadomosc)
-	{
-		QA.wypiszZLinia("[Ostrzeżenie] " + wiadomosc);
-	}
-	
-	public static void info(String wiadomosc)
-	{
-		QA.wypiszZLinia("[Informacja] " + wiadomosc);
-	}
-	
+	/**
+	 * metoda główna klasy
+	 * pobiera pytanie, przetwarza, odpytuje Google'a
+	 * pobiera wyniki, wyciąga prawdopodobne odpowiedzi
+	 * i wypisuje na ekran
+	 */
 	public void uruchomAlgorytm()
 	{
+		this.liczCzas();
+		this.inicjujCache();
 		this.wprowadzPytanie();
-		if (this.trybLokalny)
-		{
-			this.zaladujPlik();
-		}
-		else
-		{
-			this.rzucWGoogle();
-			this.przetwarzajWszystkieLinki();
-		}
-		
+		this.rzucWGoogle();
+		this.przetwarzajWszystkieLinki();
 		this.sortujMape();
+		this.listaOtoczeniaSlowKluczowych = Tablice.goraMapy(this.listaOtoczeniaSlowKluczowych, 1000);
+		this.odrzucPrzyimki(this.listaOtoczeniaSlowKluczowych);
+		this.sugestieOdpowiedzi();
+		this.czasDzialaniaAlgorytmu();
+		/*
+		 * this.start();
+		 * this.wprowadzPytanie();
+		 * this.poszukajWInternecie();
+		 * this.
+		 * this.koniec();
+		 */
+		
 	}
-	
+
+	public String uruchomAlgorytm(String pytanie)
+	{
+		return "";
+	}
+	/**
+	 * inicjuje pamięć podręczną używaną do zapisu błędnych linków (nie pobiera ich 2 raz i plików
+	 * , które pierwsze pobranie trwało długo
+	 */
+	private void inicjujCache()
+	{
+		this.bledneLinki = this.cache.czytaj("bledne-linki");
+		this.liczbaZlychLinkow = 0;
+		for (String linia : this.cache.czytaj("czas-przetwarzania"))
+		{
+			String[] elementy = linia.split(" ");
+			this.czasyPobierania.put(elementy[0], Integer.valueOf(elementy[1]));
+		}
+		//czasyPobierania = this.sortujMape(czasyPobierania);
+	}
+
+	/**
+	 * prosi o wpisanie pytania, na które poszuka program odpowiedzi.
+	 */
 	private void wprowadzPytanie()
 	{
-		QA.wypiszZLinia("Pytanie: ");
+		Ekran.wypiszZLinia("Pytanie: ");
 		try
 		{
-			this.pytanie = QA.wejscie.nextLine();
-			this.przetworzPytanie();
+			String pytanie = Ekran.wejscie.nextLine();
+			this.przetworzPytanie(pytanie);
 		}
 		catch(NoSuchElementException e)
 		{
-			QA.wyjscie("Brak pytania", Error.brakPytania);
+			Ekran.wyjscie("Brak pytania", Error.brakPytania);
 		}
 	}
 	
-	private void przetworzPytanie()
+	/**
+	 * przetwarza pytanie, 
+	 * dokonuje ekstrakcja przymiotnika, 
+	 * rzeczownika X, przyimka i rzeczownika Y
+	 * @param pytanie pytanie do przetworzenia
+	 */
+	private void przetworzPytanie(String pytanie)
 	{
-		QA.info("Przetwarzam pytanie");
-		// TODO: polskie znaki w pytaniu
-		// this.pytanie = PolskieZnaki.zastap(this.pytanie);
-		this.pytanie = this.pytanie.toLowerCase();
-		Pattern wzorzec = Pattern.compile("([nN]aj[a-zA-Z]+[yea]) ([a-zA-Z\\ ]+) (we|w|z|na) ([a-zA-Z\\ ]+)");
-		Matcher sekwencja = wzorzec.matcher(this.pytanie);
+		Ekran.info("Przetwarzam pytanie");
+		pytanie = pytanie.toLowerCase();
+		Pattern wzorzec = Pattern.compile("(naj[a-zA-Z]+[yea]) ([a-zA-Z\\ ]+) (we|w|z|na| )?([a-zA-Z\\ ]+)");
+		Matcher sekwencja = wzorzec.matcher(pytanie);
 		if (sekwencja.find())
 		{
-			zapiszDoPolWynikiPrzetworzenia(sekwencja);
-			zalogujOPozytywnymPrzetworzeniu();
-			QA.info("Pozytywny wynik przetwarzania.");
+			this.przymiotnik = sekwencja.group(1);
+			this.X = sekwencja.group(2);
+			this.przyimek = sekwencja.group(3);
+			this.Y = sekwencja.group(4);
+			Logowanie.log("Pozytywne przetworzyłem pytanie.");
+			Logowanie.log("przymiotnik = '" + this.przymiotnik + "'.");
+			Logowanie.log("X = '" + this.X + "'.");
+			Logowanie.log("przyimek = '" + this.przyimek + "'.");
+			Logowanie.log("Y = '" + this.Y + "'.");
+			Logowanie.log("");
+			Ekran.info("Pozytywny wynik przetwarzania.");
 			this.przygotujElementyFrazy();
 		}
 		else
 		{
-			Logowanie.log("Nie udało mi się przetworzyć pytania '" + this.pytanie + "'.");
-			QA.wyjscie("Negatywny wynik przetwarzania.", Error.bladPrzetwarzania);
+			Logowanie.log("Nie udało mi się przetworzyć pytania '" + pytanie + "'.");
+			Ekran.wyjscie("Negatywny wynik przetwarzania.", Error.bladPrzetwarzania);
 		}
 	}
-
-	private void zapiszDoPolWynikiPrzetworzenia(Matcher sekwencja)
-	{
-		this.przymiotnik = sekwencja.group(1);
-		this.X = sekwencja.group(2);
-		this.przyimek = sekwencja.group(3);
-		this.Y = sekwencja.group(4);
-	}
-
-	private void zalogujOPozytywnymPrzetworzeniu()
-	{
-		Logowanie.log("Pozytywne przetworzyłem pytania.");
-		Logowanie.log("przymiotnik = '" + this.przymiotnik + "'.");
-		Logowanie.log("X = '" + this.X + "'.");
-		Logowanie.log("przyimek = '" + this.przyimek + "'.");
-		Logowanie.log("Y = '" + this.Y + "'.");
-		Logowanie.log("");
-	}
 	
+	/**
+	 * odpytowuje Google'a zadaną frazą
+	 */
 	private void rzucWGoogle()
 	{
 		String fraza = this.przymiotnik + " " + this.X + " " + this.przyimek + " " + this.Y;
-		QA.wypiszZLinia("Przygotowuję do wysłania frazę: " + fraza);
-		this.przygotujElementyFrazy();
+		Ekran.wypiszZLinia("Przygotowuję do wysłania frazę: " + fraza);
 		Vector<String> kandydaci = new Vector<String>();
-		QA.info("elementy frazy nie są puste");
 		fraza = fraza.toLowerCase();
-		for (int i = 1; i <= 5; ++i)
+		//TODO: wykorzystać funkcję siec.Google.zapytajNStron
+		for (int i = 1; i <= 10; ++i)
 		{
 			String dokument = Google.zapytajStrone(fraza, i);
-			QA.info("Uzyskałem dokument na "+i+" stronie.");
+			Ekran.info("Uzyskałem dokument na "+i+" stronie.");
 			String div = Google.zwrocDivaZWynikami(dokument);
-			QA.info("Uzyskuję div z wynikami.");
+			Ekran.info("Uzyskuję div z wynikami.");
 			Vector<String> znalezioneLinki =  Google.znajdzLinki(div);
-			QA.info("Znajduję linki w znalezionym divie.");
+			Ekran.info("Znajduję linki w znalezionym divie.");
 			if (znalezioneLinki.size() == 0)
 			{
+				Ekran.wypiszZLinia(znalezioneLinki.size());
 				break;
 			}
 			kandydaci.addAll(znalezioneLinki);
-			QA.info("Na stronie "+i+" znalazłem "+znalezioneLinki.size()+" linków");
+			Ekran.info("Na stronie "+i+" znalazłem "+znalezioneLinki.size()+" linków");
 		}
 		this.dodajUnikalneLinki(kandydaci);
+		/*
+		Vector<String> strony = Google.zapytajNStron(fraza, 10);
+		for (String strona : strony)
+		{
+			strona = Google.zwrocDivaZWynikami(strona);
+			Vector<String> znalezioneLinki = Google.znajdzLinki(strona);
+			kandydaci.addAll(znalezioneLinki);
+			int linkow = znalezioneLinkow.size();
+			if (linkow == 0)
+				break;
+		}
+		 */ 
+		 
 	}
 	
-	private void zaladujPlik()
-	{
-		QA.wypisz("Podaj nazwę pliku: ");
-		String nazwa = QA.wejscie.nextLine();
-		boolean ok = true;
-		try
-		{
-			this.plikLokalny = Plik.zaladujPlik(nazwa);
-			QA.wypiszZLinia(plikLokalny);
-		}
-		catch (FileNotFoundException e)
-		{
-			e.printStackTrace();
-			ok = false;
-		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
-			ok = false;
-		}
-		if (!ok)
-			QA.wyjscie("Brak pliku!", Error.brakPliku);
-		Vector<String> wynik = this.pobierzOtoczenieDlaWszystkichElementówFrazy(plikLokalny);
-		this.dodajDoListyOtoczeniaSlowKluczowych(wynik);
-		this.sortujMape();
-		Debugowanie.mapa(this.listaOtoczeniaSlowKluczowych);
-	}
-
+	/**
+	 * zapisuje do tablicy elementy frazy
+	 * @see pobierzOtoczenieDlaWszystkichElementówFrazy
+	 */
 	private void przygotujElementyFrazy()
 	{
 		String[] elementyFrazy = { this.przymiotnik, this.X, this.przyimek, this.Y };
 		this.elementyFrazy = elementyFrazy;
 	}
 	
+	/**
+	 * dodaje do prywatnego wektora zawartość z parametru tylko unikalne wartości
+	 * @param linki - wektor słów
+	 */
 	private void dodajUnikalneLinki(Vector<String> linki)
 	{
-		for (String link : linki)
-		{
-			if (!this.linki.contains(link))
-			{
-				this.linki.add(link);
-			}
-		}
+		this.linki.addAll(linki);
 	}
 	
-	private void przetwarzajLink(String link)
-	{
-		if (this.czytajZCache("bledne-linki").contains(link))
-		{
-			return;
-		}
-		try
-		{
-			if (this.dozwolonyPlik(link))
-			{
-				String dokument = Plik.pobierzZUrla(link);
-				Logowanie.log("Pobrałem dokument dla linku '"+link+"'");
-				dokument = Google.konwertujHTMLDoTekstu(dokument);
-				Vector<String> otoczenie = this.pobierzOtoczenieDlaWszystkichElementówFrazy(link, dokument);
-				this.dodajDoListyOtoczeniaSlowKluczowych(otoczenie);
-			}
-		}
-		catch(IOException e)
-		{
-			++this.bledneLinki;
-			this.zapiszDoCache("bledne-linki.cache", link);
-		}
-		//}
-	}
-	
+	/**
+	 * pobiera otoczenia dla wszystkich elementów frazy
+	 * @param dokument zrodlo
+	 * @return tablice slow w otoczeniu slow kluczowych
+	 */
 	private Vector<String> pobierzOtoczenieDlaWszystkichElementówFrazy(String dokument)
 	{
 		Vector<String> rezultat = new Vector<String>();
@@ -306,6 +225,13 @@ public class QA
 		return rezultat;
 	}
 	
+	/**
+	 * funkcja diagnostyczna 
+	 * @see pobierzOtoczenieDlaWszystkichElementowFrazy
+	 * @param link - skad pochodzi dokument
+	 * @param dokument - zrodlo
+	 * @return tablica
+	 */
 	private Vector<String> pobierzOtoczenieDlaWszystkichElementówFrazy(String link, String dokument)
 	{
 		Vector<String> rezultat = new Vector<String>();
@@ -316,11 +242,16 @@ public class QA
 		return rezultat;
 	}
 	
+	/**
+	 * dodaje elementy z wektora do mapy zliczającej ile takich slow wystapilo w tekstach
+	 * @param otoczenie - wektor slow otoczenia
+	 */
 	private void dodajDoListyOtoczeniaSlowKluczowych(Vector<String> otoczenie)
 	{
 		for (String element : otoczenie)
 		{
-			if (!jestLiczba(element))
+			element = element.trim();
+			if (!element.matches("[0-9]+.*") && !element.isEmpty())
 			{
 				if (!this.listaOtoczeniaSlowKluczowych.containsKey(element))
 				{
@@ -335,31 +266,130 @@ public class QA
 		}
 	}
 	
-	private boolean jestLiczba(String element)
+	/**
+	 * klasa obsługująca pamiec podreczna dla QA
+	 * @author Marek
+	 *
+	 */
+	class Cache
 	{
-		try
+		/**
+		 * sciezka zapisu danych pamieci podrecznej
+		 */
+		private final static String sciezka = "cache\\QA";
+		
+		/**
+		 * zapisuje w kontenerze (pliku o rozszerzeniu .cache wartosc
+		 * @param kontener - nazwa pliku
+		 * @param zawartosc - dane do zapisania
+		 */
+		public void zapisz(String kontener, String zawartosc)
 		{
-			Double.parseDouble(element);
+			try
+			{
+				Plik.dodajDoPliku(sciezka+"\\"+kontener+".cache", zawartosc+"\n");
+			}
+			catch(IOException e)
+			{
+				Plik.zapiszDoPliku(sciezka+"\\"+kontener+".cache", zawartosc+"\n");
+			}
 		}
-		catch(NumberFormatException e)
+		
+		/**
+		 * czyta dane z pamieci podrecznej
+		 * @param kontener - nazwa pliku
+		 * @return wektor
+		 */
+		public Vector<String> czytaj(String kontener)
 		{
-			return false;
+			Vector<String> wynik = new Vector<String>();
+			try
+			{
+				return Plik.plikDoTablicy(sciezka+"\\"+kontener+".cache");
+			}
+			catch (IOException e)
+			{
+				return wynik;
+			}
 		}
-		return true;
 	}
 
-	private void zapiszDoCache(String nazwaPliku, String zawartosc)
+	/**
+	 * przetwarza link
+	 * @param link - url do przetworzenia
+	 */
+	private void przetwarzajLink(String link)
 	{
+		if 
+		(
+				this.bledneLinki.contains(link) 
+				&& czyZawieraPodejrzaneSlowa(link)
+		)
+		{
+			return;
+		}
 		try
 		{
-			Plik.dodajDoPliku(sciezka+"\\"+nazwaPliku, zawartosc+"\n");
+			if (this.dozwolonyPlik(link))
+			{
+				long czasPrzetwarzania = System.currentTimeMillis();
+				String dokument = Plik.pobierzZUrla(link);
+				Logowanie.log("Pobrałem dokument dla linku '"+link+"'");
+				dokument = Google.konwertujHTMLDoTekstu(dokument);
+				Vector<String> otoczenie = this.pobierzOtoczenieDlaWszystkichElementówFrazy(link, dokument);
+				this.dodajDoListyOtoczeniaSlowKluczowych(otoczenie);
+				czasPrzetwarzania = System.currentTimeMillis() - czasPrzetwarzania;
+				if (czasPrzetwarzania > 20000)
+				{
+					try
+					{
+						link = URLEncoder.encode(link, Kodowanie.UTF8);
+						this.zapiszDoCache(link, dokument);
+					}
+					catch(UnsupportedEncodingException e)
+					{
+						/*
+						long numer = this.nowyNumerPlikuPamieciPodrecznej();
+						this.zapiszDoCache(numer, dokument);
+						*/
+					}
+				}
+				this.zapiszCzasPrzetwarzania(link, czasPrzetwarzania);
+			}
 		}
 		catch(IOException e)
 		{
-			Plik.zapiszDoPliku(sciezka+"\\"+nazwaPliku, zawartosc+"\n");
+			this.bledneLinki.add(link);
+			++this.liczbaZlychLinkow;
+			this.cache.zapisz("bledne-linki", link);
 		}
 	}
 	
+	private boolean czyCzasPobieraniaJestDlugi(String link)
+	{
+		Integer czasPobierania = this.czasyPobierania.get(link);
+		if (czasPobierania < 20000)
+		{
+			return true;
+		}
+		return false;
+	}
+	
+	private void zapiszDoCache(String nazwaPliku, String dokument)
+	{
+		Katalog.utworz(sciezka);
+		String sciezka = QA.Cache.sciezka+"\\"+nazwaPliku;
+		Plik.zapiszDoPliku(sciezka, dokument);
+	}
+
+	private void zapiszCzasPrzetwarzania(String link, long czas)
+	{
+		if (!this.czasyPobierania.containsKey(link))
+		{
+			this.cache.zapisz("czas-przetwarzania", link+" "+czas);
+		}
+	}
+
 	private void przetwarzajWszystkieLinki()
 	{
 		int obecnyLink = 0;
@@ -367,55 +397,14 @@ public class QA
 		for (String link : this.linki)
 		{
 			this.przetwarzajLink(link);
-			QA.wypiszZLinia("Przetworzyłem "+(obecnyLink*100)/(wszystkichLinkow)+"% linków.");
+			Ekran.wypiszZLinia("Przetworzyłem "+(obecnyLink*100)/(wszystkichLinkow)+"% linków.");
 			obecnyLink ++;
 		}
-		QA.wypiszZLinia("Przetworzyłem 100% linków.");
-		if (this.bledneLinki > 0)
+		Ekran.wypiszZLinia("Przetworzyłem 100% linków.");
+		if (this.bledneLinki.size() > 0)
 		{
-			QA.ostrzez("Błędnych linków "+this.bledneLinki);
+			Ekran.ostrzez("Błędnych linków "+this.liczbaZlychLinkow);
 		}
-	}
-	
-	private Vector<String> czytajZCache(String kontener)
-	{
-		Vector<String> wynik = new Vector<String>();
-		try
-		{
-			return Plik.plikDoTablicy(sciezka+"\\"+kontener+".cache");
-		}
-		catch (IOException e)
-		{
-			return wynik;
-		}
-	}
-	
-	private boolean czyPolskaLitera(char znak)
-	{
-		return (65 <= znak && znak <=  90 && 97 <= znak && znak <= 122);
-	}
-	
-	
-	private boolean czyZawieraPolskieLitery(String slowo)
-	{
-		for (int i = 0; i < slowo.length(); ++ i)
-		{
-			if (this.czyPolskaLitera(slowo.charAt(i)))
-			{
-				return true;
-			}
-		}
-		return false;
-	}
-	
-	private void sortujMape()
-	{
-		ValueComparator bvc =  new ValueComparator(this.listaOtoczeniaSlowKluczowych);
-		TreeMap<String, Integer> sortedMap = new TreeMap<String, Integer>(bvc);
-		sortedMap.putAll(listaOtoczeniaSlowKluczowych);
-		Plik.mapaDoPliku("debug\\posortowanaMapa.ini", sortedMap);
-		this.listaOtoczeniaSlowKluczowych = sortedMap;
-		this.goraMapy();
 	}
 	
 	private boolean dozwolonyPlik(String plik)
@@ -430,21 +419,87 @@ public class QA
 		return true;
 	}
 	
-	private void goraMapy()
+	private void czasDzialaniaAlgorytmu()
 	{
-		int index = 0;
-		Set<Map.Entry<String, Integer>> zbiorWpisow = this.listaOtoczeniaSlowKluczowych.entrySet();
-		QA.wypiszZLinia(zbiorWpisow.size());
-		this.listaOtoczeniaSlowKluczowych.clear();
-		java.util.Iterator<Map.Entry<String, Integer>> it = zbiorWpisow.iterator();
-		while (index < 1000 && it.hasNext())
-		{
-			QA.wypiszZLinia("Iteracja "+index+".");
-			this.listaOtoczeniaSlowKluczowych.put(it.next().getKey(), it.next().getValue());
-			++index;
-		}
-		Plik.mapaDoPliku("debug\\mapa2.ini", this.listaOtoczeniaSlowKluczowych);
+		long czasDzialania = System.currentTimeMillis() - this.czasDzialania;
+		Calendar liczCzasOd = Calendar.getInstance();
+		liczCzasOd.setTimeInMillis(czasDzialania);
+		SimpleDateFormat prostyFormatDaty = new SimpleDateFormat("mm:ss");
+		String data = prostyFormatDaty.format(liczCzasOd.getTime());
+		Ekran.wypiszZLinia("Czas działania algorytmu: "+data);
+	}
+
+	private void liczCzas()
+	{
+		this.czasDzialania = System.currentTimeMillis();
 	}
 	
+	private void odrzucPrzyimki(SortedMap<String, Integer> posortowanaMapa)
+	{
+		SortedMap<String, Integer> odfiltrowanaMapa = new TreeMap<String, Integer>();
+		for (Map.Entry<String, Integer> wpis : posortowanaMapa.entrySet())
+		{
+			String slowo = wpis.getKey();
+			slowo = slowo.trim();
+			if (!Tablice.zawiera(this.przyimki, slowo))
+			{
+				odfiltrowanaMapa.put(slowo, wpis.getValue());
+			}
+		}
+		posortowanaMapa = odfiltrowanaMapa;
+	}
 	
+	/**
+	 * dla posortowanej mapy uzyskuje formy podstawowe i zapisuje w pliku
+	 */
+	@SuppressWarnings("unchecked")
+	private void sugestieOdpowiedzi()
+	{
+		SortedMap<String, Integer> nowaMapa = new TreeMap<String, Integer>();
+		List<WordData> wpisy = new ArrayList<WordData>();
+		for (Map.Entry<String, Integer> wpis : this.listaOtoczeniaSlowKluczowych.entrySet())
+		{
+			String odpowiedz = wpis.getKey();
+			PolishStemmer ps = new PolishStemmer();
+			wpisy = ps.lookup(odpowiedz);
+			if (!wpisy.isEmpty())
+			{
+				String formaPodstawowa = wpisy.get(0).getStem().toString();
+				if (!nowaMapa.containsKey(formaPodstawowa))
+				{
+					nowaMapa.put(formaPodstawowa, wpis.getValue());
+				}
+				else
+				{
+					int value = nowaMapa.get(formaPodstawowa);
+					value = wpis.getValue()+value;
+					nowaMapa.put(formaPodstawowa, value);
+				}
+			}
+		}
+		nowaMapa = this.sortujMape(nowaMapa);
+		Plik.mapaDoPliku("debug\\mapa4.ini", nowaMapa);
+	}
+
+	private void sortujMape()
+	{
+		ValueComparator bvc =  new ValueComparator(this.listaOtoczeniaSlowKluczowych);
+		TreeMap<String, Integer> SortedMap = new TreeMap<String, Integer>(bvc);
+		SortedMap.putAll(this.listaOtoczeniaSlowKluczowych);
+		Plik.mapaDoPliku("debug\\posortowanaMapa.ini", SortedMap);
+		this.listaOtoczeniaSlowKluczowych = SortedMap;
+	}
+
+	private SortedMap<String, Integer> sortujMape(SortedMap<String, Integer> mapa)
+	{
+		ValueComparator bvc =  new ValueComparator(mapa);
+		SortedMap<String, Integer> map = new TreeMap<String, Integer>(bvc);
+		map.putAll(mapa);
+		return map;
+	}
+	
+	private boolean czyZawieraPodejrzaneSlowa(String link)
+	{
+		return Tablice.zawieraja(this.podejrzaneSlowa, link);
+	}
 }

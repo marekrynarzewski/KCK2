@@ -64,34 +64,6 @@ public class Otoczenie
 		return rezultat;
 	}
 	
-	public static Vector<String> przezSpacje(String wejscie, String slowo, int ileWyrazow, XLong czasDzialania)
-	{
-		long start = System.currentTimeMillis();
-		Vector<String> rezultat = new Vector<String>();
-		String[] slowa = wejscie.split(" ");
-		Vector<Integer> wszystkiePozycje = Tablice.znajdzWszystkie(slowa, slowo);
-		Vector<String> wektor = Tablice.doWektora(slowa);
-		for (Integer pozycja : wszystkiePozycje)
-		{
-			int indeksPoczatkowy = pozycja - ileWyrazow;
-			if (indeksPoczatkowy < 0)
-			{
-				indeksPoczatkowy = 0;
-			}
-			int indeksKoncowyWylaczony = pozycja + ileWyrazow;
-			if (indeksKoncowyWylaczony > wektor.size())
-			{
-				indeksKoncowyWylaczony = wektor.size();
-			}
-			List<String> podRezultat = wektor.subList(indeksPoczatkowy, indeksKoncowyWylaczony);
-			for (String podWynik : podRezultat)
-			{
-				rezultat.add(podWynik);
-			}
-		}
-		czasDzialania.set(System.currentTimeMillis() - start);
-		return rezultat;
-	}
 	
 	public static Vector<String> wyrazeniamiRegularnymi(String wejscie, String slowo, int ileWyrazow)
 	{

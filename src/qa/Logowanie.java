@@ -7,7 +7,7 @@ import java.util.Date;
 public class Logowanie
 {
 	private static final String sciezkaLogowania = "logs";
-	private static String plikLogowania = "plikLogowania.txt";
+	private static String plikLogowania;
 	
 	private static boolean pierwszeLogowanie = true;
 
@@ -18,6 +18,7 @@ public class Logowanie
 			nowyKatalogLogowania();
 			nowyPlikLogowania();
 			pierwszeLogowanie = false;
+
 		}
 		Logowanie.zapiszDoPlikuLogowania(uzyskajDateICzasWMoimFormacie()+" "+wiadomosc+"\n");
 	}
@@ -50,7 +51,6 @@ public class Logowanie
 		catch (IOException e)
 		{
 			Plik.zapiszDoPliku(plikLogowania, wiadomosc);
-			e.printStackTrace();
 		}
 	}
 	

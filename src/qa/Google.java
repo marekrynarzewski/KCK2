@@ -16,7 +16,7 @@ public class Google
 	//private static final String sciezka = "cache\\Google";
 	private static final String GoogleAPI2 = "https://www.googleapis.com/customsearch/v1?";
 	
-		private static String[] linkiZOnetu = {
+	private static String[] linkiZOnetu = {
 			"http://boksy.onet.pl/",
 			"http://www.onet.pl",
 			"http://m.onet.pl",
@@ -63,11 +63,9 @@ public class Google
 		}
 		catch (MalformedURLException e)
 		{
-			//e.printStackTrace();
 		}
 		catch (IOException e)
 		{
-			//e.printStackTrace();
 		}		
 		return "";
 	}
@@ -143,14 +141,7 @@ public class Google
 		return wejscie;
 	}
 	
-	public static String konwertujHTMLDoTekstu(String wejscie, XLong czasDzialania)
-	{
-		long start = System.currentTimeMillis();
-		wejscie = konwertujHTMLDoTekstu(wejscie);
-		czasDzialania.set(new Long(System.currentTimeMillis()-start));
-		return wejscie;
-	}
-	
+
 	public static String zwrocDivaZWynikami(String dokument)
 	{
 		Pattern wzorzecLinka = Pattern.compile("<div class=\"boxResult2\">(.*)</div>");
@@ -175,16 +166,9 @@ public class Google
 				linki.add(link);
 			}
 		}
-		Plik.wektorDoPliku("debug\\linki.txt", linki);
 		return linki;
 	}
 		
-	public static Vector<String> znajdzLinki(String fraza, int strona)
-	{
-		String dokument = zapytajStrone(fraza, strona);
-		return znajdzLinki(dokument);
-	}
-	
 	/**
 	 * wysyła zapytanie do Google'a
 	 * @see zapytajStrone
@@ -200,7 +184,6 @@ public class Google
 			String html = Google.zapytajStrone(pytanie, i);
 			result.add(html);
 		}
-	
 		return result;
 	}
 	/*

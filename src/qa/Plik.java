@@ -10,6 +10,7 @@ import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 import java.util.regex.Matcher;
@@ -78,14 +79,6 @@ public class Plik
 		buforowanyCzytnik.close();
 		czytnikStrumieniaWejscia.close();
 		strumienWejscia.close();
-		return rezultat;
-	}
-	
-	public static String pobierzZUrla(String sciezka, XLong czasDzialania) throws IOException
-	{
-		long start = System.currentTimeMillis();
-		String rezultat = Plik.pobierzZUrla(sciezka);
-		czasDzialania.set(System.currentTimeMillis() - start);
 		return rezultat;
 	}
 	
@@ -162,7 +155,7 @@ public class Plik
 		}
 	}
 	
-	public static long rozmiarZdalnegoPliku(String url) throws UnknownFilesize
+	public static long rozmiarZdalnegoPliku(String url) throws NieznanyRozmiar
 	{
 		URL link;
 		try
@@ -176,7 +169,7 @@ public class Plik
 			}
 			else
 			{
-				throw new UnknownFilesize();
+				throw new NieznanyRozmiar();
 			}
 		}
 		catch (MalformedURLException e)
@@ -202,12 +195,12 @@ public class Plik
 		return Plik.zapiszDoPliku(plik, zawartosc);
 	}
 	
-	public static long wektorDoPliku(String nazwaPliku, Vector<String> wektor)
+	public static long wektorDoPliku(String nazwaPliku, List<String> nowaZawartosc)
 	{
 		String zawartosc = "";
-		for (int i = 0; i < wektor.size(); ++i)
+		for (int i = 0; i < nowaZawartosc.size(); ++i)
 		{
-			zawartosc = zawartosc.concat(wektor.elementAt(i)+'\n');
+			zawartosc = zawartosc.concat(nowaZawartosc.get(i)+'\n');
 		}
 		return Plik.zapiszDoPliku(nazwaPliku, zawartosc);
 	}
@@ -269,5 +262,24 @@ public class Plik
 		return kodowanie;
 	}
 	
+	public static void goraPliku(String nazwaPliku, long dlugosc)
+	{
+		try
+		{
+			Vector<String> zawartosc = Plik.plikDoTablicy(nazwaPliku);
+			if (dlugosc > zawartosc.size())
+			{
+				dlugosc = zawartosc.size();
+			}
+			List<String> nowaZawartosc = zawartosc.subList(0, (int)dlugosc);
+			Plik.wektorDoPliku(nazwaPliku, nowaZawartosc);
+		}
+		catch (IOException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
 	
 }
