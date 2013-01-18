@@ -38,5 +38,9 @@ public class Ekran
 
 	public static Scanner wejscie = new Scanner(System.in);
 	
+	public static void wyjscie()
+	{
+		Ekran.wyjscie(0);
+	}
 	
 }

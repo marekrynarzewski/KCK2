@@ -7,11 +7,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.Vector;
 
+/**
+ * klasa służąca do debugowania czy wypisywania zawartości kolekcji na ekran
+ * @author Marek
+ */
 public class Debugowanie
 {
+	/**
+	 * wypisuje zbiór na ekran
+	 * @param zbior obiekt
+	 */
 	public static <T> void zbior(Set<T> zbior)
 	{
 		Ekran.wypiszZLinia("Rozmiar zbioru: "+zbior.size());
@@ -28,11 +35,11 @@ public class Debugowanie
 	 */
 	public static <T> void wektor(Vector<T> wektor)
 	{
-		Ekran.wypiszZLinia("Rozmiar: "+wektor.size());
+		Ekran.wypiszZLinia("Rozmiar wektora: "+wektor.size());
 		Iterator<T> iterator = wektor.iterator();
 		while (iterator.hasNext())
 		{
-			Ekran.wypiszZLinia(iterator.next().toString());
+			Ekran.wypiszZLinia(iterator.next());
 		}
 	}
 	
@@ -42,7 +49,7 @@ public class Debugowanie
 	 */
 	public static <T, K> void mapa(Map<T, K> mapa)
 	{
-		Ekran.wypiszZLinia("Rozmiar: "+mapa.size());
+		Ekran.wypiszZLinia("Rozmiar mapy: "+mapa.size());
 		for (Entry<T, K> wpis : mapa.entrySet())
 		{
 			Ekran.wypiszZLinia(wpis.getKey().toString()+" = "+wpis.getValue().toString());
@@ -51,7 +58,7 @@ public class Debugowanie
 	
 	public static <T> void lista(List<T> lista)
 	{
-		Ekran.wypiszZLinia("Rozmiar: "+lista.size());
+		Ekran.wypiszZLinia("Rozmiar listy: "+lista.size());
 		Iterator<T> iterator = lista.iterator();
 		while (iterator.hasNext())
 		{
@@ -59,12 +66,40 @@ public class Debugowanie
 		}
 	}
 	
+	/**
+	 * wzorowana na var_dump() z php
+	 * @param obiekt do wypisania
+	 */
 	public static <T> void var_dump(T obiekt)
 	{
-		Class<?> type = obiekt.getClass();
-		String wynik = type.getName()+"\n{\n";
-		
-		Field[] fields = type.getDeclaredFields();
+		pola(obiekt);
+		metody(obiekt);
+	}
+	
+	public static <T> void metody(T obiekt)
+	{
+		Class<? extends Object> typ = obiekt.getClass();
+		Method[] metody = typ.getMethods();
+		String wynik = "";
+		for (Method metoda : metody)
+		{
+			Class<?>[] parametry = metoda.getParameterTypes();
+			String parametryx = "";
+			for (Class<?> parametr : parametry)
+			{
+				parametryx += parametr.getName()+", ";
+			}
+			parametryx = parametryx.substring(0, parametryx.length()-2);
+			wynik += metoda.getReturnType()+" "+metoda.getName()+"("+parametryx+")\n";
+		}
+		Ekran.wypiszZLinia(wynik);
+	}
+	
+	public static <T> void pola(T obiekt)
+	{
+		Class<? extends Object> typ = obiekt.getClass();
+		Field[] fields = typ.getDeclaredFields();
+		String wynik = "";
 		for (int i=0; i<fields.length; i++)
 		{
 			Field pole = fields[i];
@@ -74,27 +109,11 @@ public class Debugowanie
 			}
 			catch (IllegalArgumentException e)
 			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
 			}
 			catch (IllegalAccessException e)
 			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
 			}
 		}
-		Method[] metody = type.getMethods();
-		for (Method metoda : metody)
-		{
-			Class<?>[] parametry = metoda.getParameterTypes();
-			String parametryx = "";
-			for (Class<?> parametr : parametry)
-			{
-				parametryx += parametr.getName()+", ";
-			}
-			wynik += metoda.getReturnType()+" "+metoda.getName()+"("+parametryx+")\n";
-		}
-		wynik += "}";
 		Ekran.wypiszZLinia(wynik);
 	}
 }

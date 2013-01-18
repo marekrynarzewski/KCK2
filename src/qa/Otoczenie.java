@@ -27,43 +27,10 @@ public class Otoczenie
 				indeksKoncowyWylaczony = wektor.size();
 			}
 			List<String> podRezultat = wektor.subList(indeksPoczatkowy, indeksKoncowyWylaczony);
-			for (String podWynik : podRezultat)
-			{
-				rezultat.add(podWynik);
-			}
+			rezultat.addAll(podRezultat);
 		}
 		return rezultat;
 	}
-	
-	public static Vector<String> przezSpacje(String link, String wejscie, String slowo, int ileWyrazow)
-	{
-		Vector<String> rezultat = new Vector<String>();
-		String[] slowa = wejscie.split(" ");
-		Vector<Integer> wszystkiePozycje = Tablice.znajdzWszystkie(slowa, slowo);
-		Vector<String> wektor = Tablice.doWektora(slowa);
-		for (Integer pozycja : wszystkiePozycje)
-		{
-			int indeksPoczatkowy = pozycja - ileWyrazow;
-			if (indeksPoczatkowy < 0)
-			{
-				indeksPoczatkowy = 0;
-			}
-			int indeksKoncowyWylaczony = pozycja + ileWyrazow;
-			if (indeksKoncowyWylaczony > wektor.size())
-			{
-				indeksKoncowyWylaczony = wektor.size();
-			}
-			List<String> podRezultat = wektor.subList(indeksPoczatkowy, indeksKoncowyWylaczony);
-			for (String podWynik : podRezultat)
-			{
-				podWynik = podWynik.toLowerCase();
-				//Logowanie.log("Dodaję słowo '"+podWynik+"' ze strony '"+link+"'");
-				rezultat.add(podWynik);
-			}
-		}
-		return rezultat;
-	}
-	
 	
 	public static Vector<String> wyrazeniamiRegularnymi(String wejscie, String slowo, int ileWyrazow)
 	{

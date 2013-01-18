@@ -20,7 +20,7 @@ public class Tablice
 		int idx = 0;
 		for (T innyElement : tablica)
 		{
-			if (innyElement.equals(element))
+			if (element.equals(innyElement))
 			{
 				rezultat.add(new Integer(idx));
 			}
@@ -29,6 +29,11 @@ public class Tablice
 		return rezultat;
 	}
 
+	/**
+	 * tablice standardowa zamienia na wektor
+	 * @param tablica wejście
+	 * @return wektor
+	 */
 	public static <T> Vector<T> doWektora(T[] tablica)
 	{
 		Vector<T> rezultat = new Vector<T>();
@@ -39,27 +44,24 @@ public class Tablice
 		return rezultat;
 	}
 	
+	/**
+	 * sprawdza czy w tablicy istnieje chociaż jeden element równy elementowi
+	 * @param tablica standardowa
+	 * @param element do wyszukania
+	 * @return prawdę jeżeli znaleziono lub fałsz w przeciwnym razie
+	 */
 	public static <T> boolean zawiera(T[] tablica, T element)
 	{
 		Vector<Integer> wektor = znajdzWszystkie(tablica, element);
 		return wektor.size() > 0;
 	}
 	
-	public static <T> Vector<T> podWektor(Vector<T> wektor, int pozycjaOd, int pozycjaDo)
-	{
-		Vector<T> rezultat = new Vector<T>();
-		int pozycja = 0;
-		for (T klucz : wektor)
-		{
-			if (pozycja >= pozycjaOd && pozycja <= pozycjaDo)
-			{
-				rezultat.add(klucz);
-			}
-			++pozycja;
-		}
-		return rezultat;
-	}
-
+	/**
+	 * zwraca jako który klucz wystąpił w mapie źródło
+	 * @param zrodlo mapa
+	 * @param klucz klucz zgodny typem kluczów mapy
+	 * @return indeks >= 0 dla znalezione wyniku lub -1 gdy nie istnieje
+	 */
 	public static <K, V> long pozycjaKluczaWMapie(Map<K, V> zrodlo, K klucz)
 	{
 		long wynik = -1;
@@ -86,6 +88,12 @@ public class Tablice
 		}
 	}
 
+	/**
+	 * funkcja odwrotna do {@code pozycjaKluczaWMapie(zrodlo, klucz)}
+	 * @param zrodlo mapa<K, V>
+	 * @param pozycja indeks szukanego klucza
+	 * @return klucz lub null jeśli nie ma takiej pozycji
+	 */
 	public static <K, V> K zwrocKlucz(Map<K, V> zrodlo, long pozycja)
 	{
 		long wskaznik = 0;
@@ -103,19 +111,27 @@ public class Tablice
 		return null;
 	}
 
+	/**
+	 * zwraca mape z parami klucza, wartosci w wysokości nie większej niż {@code pozycji}
+	 * @param zrodlo mapa<Klucz, Wartosc>
+	 * @param pozycji ilosc pozycji
+	 * @return nowaMapa
+	 */
 	public static <K, V> SortedMap<K, V> goraMapy(SortedMap<K, V> zrodlo, long pozycji)
 	{
-		K toKey = zwrocKlucz(zrodlo, pozycji);
-		if (toKey == null)
+		if (pozycji <= 0)
 		{
 			return new TreeMap<K, V>();
 		}
-		else
+		if (pozycji > zrodlo.size())
 		{
-			return zrodlo.headMap(toKey);
+			return zrodlo;
 		}
+		K doKlucza = zwrocKlucz(zrodlo, pozycji);
+		return zrodlo.headMap(doKlucza);
 	}
 	
+	@SuppressWarnings("unchecked")
 	public static <T> T[] resize(T[] oldArray, int newSize)
 	{
         int oldSize = Array.getLength(oldArray);
@@ -138,5 +154,27 @@ public class Tablice
 			}
 		}
 		return false;
+	}
+
+	public static <K, V> K zwrocKlucz(SortedMap<K, V> zrodlo, V wartosc)
+	{
+		for (Map.Entry<K, V> wpis : zrodlo.entrySet())
+		{
+			if (wpis.getValue().equals(wartosc))
+			{
+				return wpis.getKey();
+			}
+		}
+		return null;
+	}
+	
+	public static <K, V> Vector<V> wartosci(SortedMap<K, V> zrodlo)
+	{
+		Vector<V> wynik = new Vector<V>();
+		for (Map.Entry<K, V> wpis : zrodlo.entrySet())
+		{
+			wynik.add(wpis.getValue());
+		}
+		return wynik;
 	}
 }
